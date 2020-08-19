@@ -1,10 +1,10 @@
-
-AR ?= ar
-CC ?= gcc
+PREF = arm-none-eabi-
+AR ?= $(PREF)ar
+CC = $(PREF)gcc
 PREFIX ?= /usr/local
 
-CFLAGS = -O3 -std=c99 -Wall -Wextra -Ideps
-
+CFLAGS = -O2 -Wall -Wextra -Ideps
+CFLAGS +=-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard --static -nostartfiles -lnosys -Lbuild/release -Wl,--start-group -lc -lgcc -Wl,--end-group -labst_stm32f4 -lopencm3 -llist -Wl,--gc-sections -Wl,--print-gc-sections -specs=nano.specs -specs=nosys.specs
 SRCS = src/list.c \
 		   src/list_node.c \
 		   src/list_iterator.c
@@ -13,36 +13,14 @@ OBJS = $(SRCS:.c=.o)
 
 all: build/liblist.a
 
-install: all
-	cp -f build/liblist.a $(PREFIX)/lib/liblist.a
-	cp -f src/list.h $(PREFIX)/include/list.h
-
-uninstall:
-	rm -f $(PREFIX)/lib/liblist.a
-	rm -f $(PREFIX)/include/list.h
-
 build/liblist.a: $(OBJS)
 	@mkdir -p build
 	$(AR) rcs $@ $^
 
-bin/test: test.o $(OBJS)
-	@mkdir -p bin
-	$(CC) $^ -o $@
-
-bin/benchmark: benchmark.o $(OBJS)
-	@mkdir -p bin
-	$(CC) $^ -o $@
-
 %.o: %.c
-	$(CC) $< $(CFLAGS) -c -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -fr bin build *.o src/*.o
 
-test: bin/test
-	@./$<
-
-benchmark: bin/benchmark
-	@./$<
-
-.PHONY: test benchmark clean install uninstall
+.PHONY: clean
